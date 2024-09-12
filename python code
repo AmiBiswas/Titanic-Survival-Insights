@@ -1,0 +1,119 @@
+import pandas as pd
+import numpy as np
+df1=pd.read_csv("titanic3.csv")
+
+# overview the data
+df1.head(3)
+df1.describe()
+df1.info()
+
+#no of null values
+df1.isnull().sum()
+
+#fill null with mean value in age col.
+df1.age=df1.age.fillna(df1.age.mean())
+
+
+# drop NAN values from fare col.
+df1= df1.dropna(subset=['fare'])
+
+
+#change age type to int. 
+df1 = df1.astype({'age': int})
+
+#drop cabin and home.dest as these no use and cabin consists many null values
+df1 = df1.drop(['cabin','home.dest'], axis=1)
+
+# Drop rows with null values in specific columns
+df1 = df1.dropna(subset='embarked') 
+
+# fill missing values (NaNs) in the boat column of the DataFrame df1 with 0.
+df1['boat'] = df1['boat'].fillna(0)
+
+#percent_missing values in each col.
+percent_missing = df1.isnull().sum() * 100 / len(df1)
+print(percent_missing)
+
+
+#drop col. body
+df1 = df1.drop(['body'], axis=1)
+
+#histogram of all numeric col.
+df1.hist(bins=20)
+
+#fare with 0 values
+len(df1[df1['fare']==0])
+
+
+#change 0 with median fare value
+median_fare = df1['fare'].median()
+df1['fare'] = df1['fare'].replace(0, median_fare)
+
+
+# Replace specific values form boat col.
+df1['boat'] = df1['boat'].replace({'A': 1, 'B': 2, 'C': 3,'D':4})
+
+
+
+from sklearn.preprocessing import LabelEncoder
+# Assuming df1 is your DataFrame and 'boat' is the column you want to encode with numbers
+le = LabelEncoder()
+df1['boat'] = le.fit_transform(df1['boat'])
+# Convert the encoded column to float
+df1['boat'] = df1['boat'].astype(float)
+df1['boat']
+
+
+# Assuming df1 is your DataFrame and 'sex' is the column you want to encode
+le = LabelEncoder()
+df1['sex'] = le.fit_transform(df1['sex'])
+# Convert the encoded column to float
+df1['sex'] = df1['sex'].astype(float)
+df1['sex']
+
+
+import numpy as np
+#brake the dataframe into x (indep vari) and y (dep vari as  survived)
+# Assuming df1 is your DataFrame
+x = df1.iloc[:, np.r_[3:6, 8:10]].values # we don't take tickit col
+y=df1.iloc[:,1].values
+
+
+
+#train_test_split: This function splits arrays or matrices into random train and test subsets.
+# test_size=0.2: This parameter specifies that 20% of the data should be used for the test set, and 
+#the remaining 80% for the training set
+#random_state=0: This parameter ensures reproducibility by setting a seed for the random number generator.
+from sklearn.model_selection import train_test_split
+x_train,x_test,y_train,y_test=train_test_split(x,y,test_size=0.2,random_state=0)
+
+
+
+## Use StandardScaler 
+# using scaler function to scale the independet variable to standard normal distribution
+# Scaling can improve the numerical stability of algorithms by reducing the risk of 
+# numerical overflow or underflow.
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+ss = StandardScaler()
+x_train_ss = ss.fit_transform(x_train)
+x_test_ss= ss.fit_transform(x_test)
+
+
+
+# DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier
+#DecisionTreeClassifier=dtc
+DTClassifier=DecisionTreeClassifier(criterion="entropy",random_state=0)
+DTClassifier.fit(x_train_ss,y_train)
+
+
+# try to predict y using x_test
+y_pred_ss=DTClassifier.predict(x_test_ss)
+y_pred_ss
+
+
+# Assuming y_pred and y_test are your predicted and actual values
+from sklearn import metrics
+accuracy = metrics.accuracy_score(y_test, y_pred)
+print(f'Accuracy: {accuracy}')
